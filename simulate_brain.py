@@ -2,54 +2,50 @@ import time
 import torch
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"=== FlyBrain Spiking Neural Network on {device} ===")
+print(f"=== Targeted Drosophila SNN Simulation on {device} ===")
 
-# 1. Load Pre-built Matrix (~0.5s load time)
-print("Loading saved adjacency matrix...")
+# 1. Load Matrix & Cell Groups
 adj_matrix = torch.load("data/fly_adjacency_matrix.pt", map_location=device)
+cell_groups = torch.load("data/cell_groups.pt")
 num_neurons = adj_matrix.shape[0]
 
-# 2. Simulation Parameters
-decay = 0.95              # Membrane decay coefficient
-v_threshold = 1.0         # Spiking threshold
-v_reset = 0.0             # Reset potential after spike
-synapse_weight = 0.05     # Synaptic strength multiplier
+# 2. Simulation Physics Hyperparameters
+decay = 0.95
+v_threshold = 1.0
+v_reset = 0.0
+synapse_weight = 0.08
 
-# State Variables on GPU
 v_membrane = torch.zeros(num_neurons, device=device)
 spikes = torch.zeros(num_neurons, device=device)
 
-# 3. Inject Initial Stimulus (Stimulate first 500 sensory neurons)
-print("Injecting initial current into 500 sensory neurons...")
+# 3. Stimulate Olfactory (Smell) Circuit
 external_input = torch.zeros(num_neurons, device=device)
-external_input[:500] = 1.5
+olfactory_idx = cell_groups["olfactory"].to(device)
+mb_idx = cell_groups["mushroom_body"].to(device)
+motor_idx = cell_groups["descending_motor"].to(device)
 
-# 4. Run Simulation Steps
-time_steps = 67
-print(f"\nRunning {time_steps} timestep GPU simulation...")
+external_input[olfactory_idx] = 2.0  # Drive sensory neurons past firing threshold
+print(f"Injecting sensory signal into {len(olfactory_idx)} Olfactory neurons...\n")
+
 start_time = time.time()
-
 total_spikes = 0
-for step in range(1, time_steps + 1):
-    # Synaptic current received from connected neurons that spiked last step
+
+# 4. 50-step (50ms) Simulation Loop
+for step in range(1, 51):
     synaptic_current = torch.sparse.mm(adj_matrix.t(), spikes.unsqueeze(1)).squeeze(1) * synapse_weight
-    
-    # Update membrane potential: Decay + Synaptic Input + External Input (only on step 1)
     current_input = external_input if step == 1 else 0.0
     v_membrane = (v_membrane * decay) + synaptic_current + current_input
-    
-    # Determine which neurons spike this turn
+
     spikes = (v_membrane >= v_threshold).float()
-    num_spikes_this_step = int(spikes.sum().item())
-    total_spikes += num_spikes_this_step
-    
-    # Reset potential of neurons that spiked
     v_membrane = torch.where(spikes > 0, torch.tensor(v_reset, device=device), v_membrane)
-    
-    if step % 10 == 0 or num_spikes_this_step > 0:
-        print(f"  Step {step:2d}/{time_steps} | Active Spikes: {num_spikes_this_step:,}")
+
+    step_spikes = int(spikes.sum().item())
+    total_spikes += step_spikes
+
+    mb_spikes = int(spikes[mb_idx].sum().item())
+    motor_spikes = int(spikes[motor_idx].sum().item())
+
+    print(f"Step {step:2d}/50 | Total Spikes: {step_spikes:5d} | Mushroom Body: {mb_spikes:2d} | Motor Output: {motor_spikes:2d}")
 
 elapsed = time.time() - start_time
-print(f"\nSimulation Complete in {elapsed * 1000:.2f} ms!")
-print(f"Total Spikes Triggered Across Fly Brain: {total_spikes:,}")
-print(f"VRAM Usage: {torch.cuda.memory_allocated(0) / (1024 ** 2):.2f} MB")
+print(f"\nSimulation Complete: {total_spikes:,} total spikes processed in {elapsed:.3f}s on GPU.")
