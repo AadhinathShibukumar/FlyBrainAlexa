@@ -5,3 +5,5 @@ data/*.npy
 data/flywire_annotations/
 __pycache__/
 .DS_Store
+data/*.pt
+data/*.pt
