@@ -25,7 +25,7 @@ external_input = torch.zeros(num_neurons, device=device)
 external_input[:500] = 1.5
 
 # 4. Run Simulation Steps
-time_steps = 50
+time_steps = 67
 print(f"\nRunning {time_steps} timestep GPU simulation...")
 start_time = time.time()
 
