@@ -1,11 +1,26 @@
+import numpy as np
 from flygym.simulation import Simulation
 from flygym.compose import NeuroMechFly, FlatGroundWorld
 
-# 1. Initialize the official 3D NeuroMechFly body and ground world
-fly = NeuroMechFly()
-world = FlatGroundWorld(fly=fly)
+class FlyOrientation:
+    def __init__(self, quat=(1.0, 0.0, 0.0, 0.0)):
+        self.format = "quat"
+        self.quat = quat
 
-# 2. Build and reset the simulation
+    def as_kwargs(self):
+        return {"quat": self.quat}
+
+# 1. Initialize fly with contact sensors disabled to prevent MJCF body lookup errors
+fly = NeuroMechFly(contact_sensor_placements=())
+world = FlatGroundWorld()
+
+# 2. Attach fly to arena
+spawn_pos = (0, 0, 1.3)
+spawn_rot = FlyOrientation()
+
+world.add_fly(fly, spawn_position=spawn_pos, spawn_rotation=spawn_rot)
+
+# 3. Build and reset simulation
 sim = Simulation(world=world)
 obs = sim.reset()
 
