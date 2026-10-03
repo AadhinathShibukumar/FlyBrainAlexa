@@ -41,3 +41,16 @@ data/neuron_coords.npy
 # OS files
 .DS_Store
 Thumbs.db
+
+# Research assets
+archive/
+videos/
+
+# Datasets
+data/*.pt
+data/*.npy
+data/*.feather
+data/flywire_annotations/
+
+# Virtual environment
+fly_env/
