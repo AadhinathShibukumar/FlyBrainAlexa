@@ -1,5 +1,43 @@
-fly_env/
+# Python
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+
+# Virtual environments
+fly_env/
+venv/
+.env
+
+# VS Code
+.vscode/
+
+# Videos
 videos/
+
+# Archives and backups
+archive/
+*.tar
+*.tar.gz
+*.zip
+
+# Generated brain data
+data/*.pt
+data/*.npy
+data/*.feather
+
+# Research datasets
+data/flywire_annotations/
+data/flywire_synapses_783.feather
+data/per_neuron_neuropil_count_post_783.feather
+data/per_neuron_neuropil_count_pre_783.feather
+data/proofread_root_ids_783.npy
+
+# Generated outputs
+data/cell_groups.pt
+data/fly_adjacency_matrix.pt
+data/neuron_coords.npy
+
+# OS files
+.DS_Store
+Thumbs.db
