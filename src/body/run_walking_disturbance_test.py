@@ -13,6 +13,7 @@ def main() -> int:
     parser.add_argument("--physics-substeps", type=int, default=10)
     parser.add_argument("--roll-deg", type=float, default=5.0)
     parser.add_argument("--roll-rate-deg-s", type=float, default=0.0)
+    parser.add_argument("--pitch-rate-deg-s", type=float, default=0.0)
     parser.add_argument("--lateral-offset", type=float, default=0.05)
     parser.add_argument("--telemetry", type=Path, default=Path("/tmp/walking_disturbance.csv"))
     parser.add_argument("--summary", type=Path, default=Path("data/walking_disturbance.json"))
@@ -25,6 +26,7 @@ def main() -> int:
         args.roll_deg,
         args.lateral_offset,
         args.roll_rate_deg_s,
+        args.pitch_rate_deg_s,
     )
     failures = validate_summary(result)
     output = {"passed": not failures, "failures": failures, "summary": result}
