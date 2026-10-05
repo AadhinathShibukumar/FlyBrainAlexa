@@ -1,0 +1,11 @@
+{
+  "steps": 2000,
+  "duration_s": 10.0,
+  "forward_displacement": 0.6877388616840503,
+  "lateral_displacement": -0.0026316042485144304,
+  "average_speed": 0.06877438965279112,
+  "falls": 0,
+  "recovery_fraction": 0.0,
+  "max_tilt_deg": 7.369492680113189,
+  "final_support_legs": 6
+}

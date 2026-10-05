@@ -12,3 +12,4 @@ def test_telemetry_logger_writes_header_and_row(tmp_path) -> None:
     assert rows[0]["frame"] == "1"
     assert rows[0]["motor_drive"] == "0.5"
     assert rows[0]["height"] == ""
+    assert rows[0]["contact_LF"] == ""

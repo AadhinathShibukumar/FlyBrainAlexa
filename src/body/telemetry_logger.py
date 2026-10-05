@@ -22,6 +22,18 @@ class TelemetryLogger:
         "pitch_deg",
         "wing_motion",
         "wing_drive",
+        "contact_LF",
+        "contact_LM",
+        "contact_LH",
+        "contact_RF",
+        "contact_RM",
+        "contact_RH",
+        "force_LF",
+        "force_LM",
+        "force_LH",
+        "force_RF",
+        "force_RM",
+        "force_RH",
     )
 
     def __init__(self, path: str | Path) -> None:

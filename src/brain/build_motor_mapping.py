@@ -1,9 +1,4 @@
-"""Build a verified motor-neuron mapping from FlyWire annotations.
-
-The current annotation snapshot identifies descending neurons and their side,
-but does not identify front/middle/hind leg targets. The output therefore
-contains side-specific descending populations and leaves leg identity explicit.
-"""
+"""Build descending and efferent motor groups from FlyWire annotations."""
 
 from pathlib import Path
 
@@ -26,23 +21,32 @@ def main() -> None:
     descending["index"] = descending["root_id"].map(id_to_index)
     descending = descending.dropna(subset=["index"])
     descending["index"] = descending["index"].astype(np.int64)
+    motor = annotations[
+        annotations["super_class"].eq("motor")
+        & annotations["flow"].eq("efferent")
+    ].copy()
+    motor["index"] = motor["root_id"].map(id_to_index)
+    motor = motor.dropna(subset=["index"])
+    motor["index"] = motor["index"].astype(np.int64)
+
+    def indices(frame: pd.DataFrame) -> torch.Tensor:
+        return torch.tensor(sorted(frame["index"].unique()), dtype=torch.long)
 
     mapping = {
-        "descending_all": torch.tensor(
-            sorted(descending["index"].unique()), dtype=torch.long
+        "descending_all": indices(descending),
+        "descending_left": indices(descending.loc[descending["side"].eq("left")]),
+        "descending_right": indices(descending.loc[descending["side"].eq("right")]),
+        "motor_all": indices(motor),
+        "motor_left": indices(motor.loc[motor["side"].eq("left")]),
+        "motor_right": indices(motor.loc[motor["side"].eq("right")]),
+        "motor_brain": indices(
+            motor.loc[motor["cell_class"].eq("brain_motor_neuron")]
         ),
-        "descending_left": torch.tensor(
-            sorted(
-                descending.loc[descending["side"].eq("left"), "index"].unique()
-            ),
-            dtype=torch.long,
-        ),
-        "descending_right": torch.tensor(
-            sorted(
-                descending.loc[descending["side"].eq("right"), "index"].unique()
-            ),
-            dtype=torch.long,
-        ),
+        "motor_pharyngeal": indices(motor.loc[motor["nerve"].eq("PhN")]),
+        "motor_antennal": indices(motor.loc[motor["nerve"].eq("AN")]),
+        "motor_ocellar": indices(motor.loc[motor["nerve"].eq("ON")]),
+        "motor_maxillary_labial": indices(motor.loc[motor["nerve"].eq("MxLbN")]),
+        "motor_cervical": indices(motor.loc[motor["nerve"].eq("CV")]),
         "leg_targets_verified": False,
     }
     torch.save(mapping, OUTPUT)
@@ -51,6 +55,7 @@ def main() -> None:
     print(f"Descending neurons: {len(mapping['descending_all']):,}")
     print(f"Left descending neurons: {len(mapping['descending_left']):,}")
     print(f"Right descending neurons: {len(mapping['descending_right']):,}")
+    print(f"Efferent motor neurons: {len(mapping['motor_all']):,}")
     print("Front/middle/hind leg targets: not present in this annotation snapshot")
 
 
