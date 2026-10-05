@@ -26,7 +26,7 @@ class ConnectomeBrain:
         self.motor_groups = {
             name: indices.long()
             for name, indices in mapping.items()
-            if name.startswith("descending_")
+            if name.startswith(("descending_", "motor_"))
         }
         self.decay = decay
         self.threshold = threshold
@@ -75,9 +75,9 @@ class ConnectomeBrain:
         self.spikes = (self.membrane >= self.threshold).to(self.membrane.dtype)
         self.membrane.masked_fill_(self.spikes.bool(), 0.0)
 
-        motor_spikes = self.spikes[self.motor_groups["descending_all"]].sum()
+        descending_spikes = self.spikes[self.motor_groups["descending_all"]].sum()
         motor_count = max(len(self.motor_groups["descending_all"]), 1)
-        motor_drive = float((motor_spikes / motor_count).item())
+        descending_drive = float((descending_spikes / motor_count).item())
         left_count = max(len(self.motor_groups["descending_left"]), 1)
         right_count = max(len(self.motor_groups["descending_right"]), 1)
         left_drive = float(
@@ -86,11 +86,27 @@ class ConnectomeBrain:
         right_drive = float(
             (self.spikes[self.motor_groups["descending_right"]].sum() / right_count).item()
         )
+        motor_neuron_count = max(len(self.motor_groups["motor_all"]), 1)
+        motor_neuron_spikes = self.spikes[self.motor_groups["motor_all"]].sum()
+        motor_neuron_drive = float((motor_neuron_spikes / motor_neuron_count).item())
+        motor_left_count = max(len(self.motor_groups["motor_left"]), 1)
+        motor_right_count = max(len(self.motor_groups["motor_right"]), 1)
+        motor_left_drive = float(
+            (self.spikes[self.motor_groups["motor_left"]].sum() / motor_left_count).item()
+        )
+        motor_right_drive = float(
+            (self.spikes[self.motor_groups["motor_right"]].sum() / motor_right_count).item()
+        )
+        motor_drive = max(descending_drive, motor_neuron_drive)
         leg_drives = self.leg_mapper.step(left_drive, right_drive)
         return {
-            "motor_spikes": float(motor_spikes.item()),
+            "motor_spikes": float(descending_spikes.item()),
             "motor_drive": motor_drive,
             "left_drive": left_drive,
             "right_drive": right_drive,
+            "motor_neuron_spikes": float(motor_neuron_spikes.item()),
+            "motor_neuron_drive": motor_neuron_drive,
+            "motor_neuron_left_drive": motor_left_drive,
+            "motor_neuron_right_drive": motor_right_drive,
             "leg_drives": leg_drives,
         }
