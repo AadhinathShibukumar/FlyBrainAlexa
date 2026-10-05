@@ -12,7 +12,15 @@ from src.body.telemetry_logger import TelemetryLogger
 from src.brain.connectome_brain import ConnectomeBrain
 
 
-def run(steps: int, telemetry_path: Path) -> dict[str, float | int]:
+def run(
+    steps: int,
+    telemetry_path: Path,
+    physics_substeps: int = 50,
+) -> dict[str, float | int]:
+    if steps <= 0:
+        raise ValueError("steps must be positive")
+    if physics_substeps <= 0:
+        raise ValueError("physics_substeps must be positive")
     body = FlyBody()
     sim = body.get_sim()
     fly = body.get_fly()
@@ -29,7 +37,7 @@ def run(steps: int, telemetry_path: Path) -> dict[str, float | int]:
     gait = TripodGait()
     gait.frequency = 12.0
     recovery = RecoveryController()
-    dt = 50 * sim.mj_model.opt.timestep
+    dt = physics_substeps * sim.mj_model.opt.timestep
     filtered = neutral_targets.copy()
     contacts = body.get_sensory_state()["leg_contact"]
     proprioceptive_drive = 0.0
@@ -73,7 +81,7 @@ def run(steps: int, telemetry_path: Path) -> dict[str, float | int]:
                 body.bio_limits_max - body.bio_limits_min
             )
             filtered = 0.15 * targets + 0.85 * filtered
-            for _ in range(50):
+            for _ in range(physics_substeps):
                 body.step(filtered)
 
             sensory = body.get_sensory_state()
@@ -139,10 +147,11 @@ def _roll_pitch(quaternion: np.ndarray) -> tuple[float, float]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run a headless walking benchmark.")
     parser.add_argument("--steps", type=int, default=200)
+    parser.add_argument("--physics-substeps", type=int, default=50)
     parser.add_argument("--telemetry", type=Path, default=Path("data/walking_telemetry.csv"))
     parser.add_argument("--summary", type=Path, default=Path("data/walking_summary.json"))
     args = parser.parse_args()
-    summary = run(args.steps, args.telemetry)
+    summary = run(args.steps, args.telemetry, args.physics_substeps)
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2))
