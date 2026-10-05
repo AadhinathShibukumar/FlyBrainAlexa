@@ -17,6 +17,7 @@ def main() -> int:
     )
     parser.add_argument("--steps", type=int, default=100)
     parser.add_argument("--physics-substeps", type=int, default=10)
+    parser.add_argument("--neural-interval", type=int, default=1)
     parser.add_argument("--output-dir", type=Path, default=Path("data/combined_impulses"))
     parser.add_argument("--summary", type=Path, default=Path("data/combined_impulse_sweep.json"))
     args = parser.parse_args()
@@ -30,6 +31,7 @@ def main() -> int:
             args.physics_substeps,
             initial_roll_rate_deg_s=rate,
             initial_pitch_rate_deg_s=rate,
+            neural_interval=args.neural_interval,
         )
         failures = validate_summary(result)
         trials.append(

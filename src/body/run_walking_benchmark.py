@@ -20,11 +20,14 @@ def run(
     initial_lateral_offset: float = 0.0,
     initial_roll_rate_deg_s: float = 0.0,
     initial_pitch_rate_deg_s: float = 0.0,
+    neural_interval: int = 1,
 ) -> dict[str, float | int]:
     if steps <= 0:
         raise ValueError("steps must be positive")
     if physics_substeps <= 0:
         raise ValueError("physics_substeps must be positive")
+    if neural_interval <= 0:
+        raise ValueError("neural_interval must be positive")
     body = FlyBody()
     sim = body.get_sim()
     fly = body.get_fly()
@@ -64,6 +67,12 @@ def run(
     falls = 0
     recovery_frames = 0
     previous_fallen = False
+    brain_state = brain.step(
+        olfactory_drive=2.0,
+        mechanosensory_drive=float(contacts.mean()),
+        proprioceptive_drive=proprioceptive_drive,
+        contact_force_drive=contact_force_drive,
+    )
 
     with TelemetryLogger(telemetry_path) as logger:
         for frame in range(steps):
@@ -74,14 +83,15 @@ def run(
                 pitch=pitch,
                 root_velocity=sim.mj_data.qvel[:2],
             )
-            state = brain.step(
-                olfactory_drive=2.0,
-                mechanosensory_drive=float(contacts.mean()),
-                proprioceptive_drive=proprioceptive_drive,
-                contact_force_drive=contact_force_drive,
-            )
+            if frame % neural_interval == 0:
+                brain_state = brain.step(
+                    olfactory_drive=2.0,
+                    mechanosensory_drive=float(contacts.mean()),
+                    proprioceptive_drive=proprioceptive_drive,
+                    contact_force_drive=contact_force_drive,
+                )
             amplitudes = np.array(
-                [state["leg_drives"][leg] for leg in body.legs],
+                [brain_state["leg_drives"][leg] for leg in body.legs],
                 dtype=float,
             ) * recovery_scale
             gait_activations = gait.step(
@@ -124,9 +134,9 @@ def run(
                 {
                     "frame": frame,
                     "sim_time": sim.mj_data.time,
-                    "motor_drive": state["motor_drive"],
-                    "left_drive": state["left_drive"],
-                    "right_drive": state["right_drive"],
+                    "motor_drive": brain_state["motor_drive"],
+                    "left_drive": brain_state["left_drive"],
+                    "right_drive": brain_state["right_drive"],
                     "contact_fraction": float(contacts.mean()),
                     "force_drive": contact_force_drive,
                     "proprioceptive_drive": proprioceptive_drive,
@@ -173,10 +183,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run a headless walking benchmark.")
     parser.add_argument("--steps", type=int, default=200)
     parser.add_argument("--physics-substeps", type=int, default=50)
+    parser.add_argument("--neural-interval", type=int, default=1)
     parser.add_argument("--telemetry", type=Path, default=Path("data/walking_telemetry.csv"))
     parser.add_argument("--summary", type=Path, default=Path("data/walking_summary.json"))
     args = parser.parse_args()
-    summary = run(args.steps, args.telemetry, args.physics_substeps)
+    summary = run(
+        args.steps,
+        args.telemetry,
+        args.physics_substeps,
+        neural_interval=args.neural_interval,
+    )
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2))
