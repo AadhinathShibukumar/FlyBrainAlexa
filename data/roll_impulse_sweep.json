@@ -1,0 +1,109 @@
+{
+  "trial_count": 6,
+  "passed_count": 6,
+  "largest_passing_roll_rate_deg_s": 900.0,
+  "trials": [
+    {
+      "trial": 1,
+      "roll_rate_deg_s": 0.0,
+      "passed": true,
+      "failures": [],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": 0.08217964772946362,
+        "lateral_displacement": -0.02428469995430332,
+        "average_speed": 0.8569271353393633,
+        "falls": 0,
+        "recovery_fraction": 0.0,
+        "max_tilt_deg": 5.748590180219415,
+        "final_support_legs": 6
+      }
+    },
+    {
+      "trial": 2,
+      "roll_rate_deg_s": 180.0,
+      "passed": true,
+      "failures": [],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": 0.08245789090916134,
+        "lateral_displacement": -0.023471774406534276,
+        "average_speed": 0.8573347051751952,
+        "falls": 0,
+        "recovery_fraction": 0.0,
+        "max_tilt_deg": 5.753077781365864,
+        "final_support_legs": 6
+      }
+    },
+    {
+      "trial": 3,
+      "roll_rate_deg_s": 360.0,
+      "passed": true,
+      "failures": [],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": 0.08009728955501672,
+        "lateral_displacement": -0.02283462588526568,
+        "average_speed": 0.8328863027676848,
+        "falls": 0,
+        "recovery_fraction": 0.0,
+        "max_tilt_deg": 5.7438801413930065,
+        "final_support_legs": 6
+      }
+    },
+    {
+      "trial": 4,
+      "roll_rate_deg_s": 540.0,
+      "passed": true,
+      "failures": [],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": 0.08044530024650542,
+        "lateral_displacement": -0.020287676992613964,
+        "average_speed": 0.8296406553145188,
+        "falls": 0,
+        "recovery_fraction": 0.0,
+        "max_tilt_deg": 5.730399286185727,
+        "final_support_legs": 6
+      }
+    },
+    {
+      "trial": 5,
+      "roll_rate_deg_s": 720.0,
+      "passed": true,
+      "failures": [],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": 0.07761153945664034,
+        "lateral_displacement": -0.01944268654818994,
+        "average_speed": 0.8000980638047318,
+        "falls": 0,
+        "recovery_fraction": 0.0,
+        "max_tilt_deg": 5.73619174405375,
+        "final_support_legs": 6
+      }
+    },
+    {
+      "trial": 6,
+      "roll_rate_deg_s": 900.0,
+      "passed": true,
+      "failures": [],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": 0.08007734713818715,
+        "lateral_displacement": -0.016875733526111936,
+        "average_speed": 0.8183625056620121,
+        "falls": 0,
+        "recovery_fraction": 0.0,
+        "max_tilt_deg": 5.742077399614803,
+        "final_support_legs": 6
+      }
+    }
+  ]
+}

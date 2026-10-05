@@ -1,0 +1,99 @@
+{
+  "trial_count": 5,
+  "passed_count": 2,
+  "largest_passing_roll_deg": 5.0,
+  "trials": [
+    {
+      "trial": 1,
+      "roll_deg": 0.0,
+      "passed": true,
+      "failures": [],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": 0.08217964772946551,
+        "lateral_displacement": -0.024284699954309655,
+        "average_speed": 0.8569271353393993,
+        "falls": 0,
+        "recovery_fraction": 0.0,
+        "max_tilt_deg": 5.7485901802193995,
+        "final_support_legs": 6
+      }
+    },
+    {
+      "trial": 2,
+      "roll_deg": 5.0,
+      "passed": true,
+      "failures": [],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": 0.08978793722810774,
+        "lateral_displacement": 0.13233591249249047,
+        "average_speed": 1.5992081605250366,
+        "falls": 0,
+        "recovery_fraction": 0.03,
+        "max_tilt_deg": 10.27649546847335,
+        "final_support_legs": 5
+      }
+    },
+    {
+      "trial": 3,
+      "roll_deg": 10.0,
+      "passed": false,
+      "failures": [
+        "max_tilt_deg=21.23922454766744 > 15.0"
+      ],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": 0.1164143091694897,
+        "lateral_displacement": 0.6255682800857707,
+        "average_speed": 6.3630807352168555,
+        "falls": 0,
+        "recovery_fraction": 0.09,
+        "max_tilt_deg": 21.23922454766744,
+        "final_support_legs": 6
+      }
+    },
+    {
+      "trial": 4,
+      "roll_deg": 15.0,
+      "passed": false,
+      "failures": [
+        "max_tilt_deg=38.536685954883026 > 15.0"
+      ],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": 0.24483101331259027,
+        "lateral_displacement": 1.9010214395608467,
+        "average_speed": 19.16722394805691,
+        "falls": 0,
+        "recovery_fraction": 0.17,
+        "max_tilt_deg": 38.536685954883026,
+        "final_support_legs": 5
+      }
+    },
+    {
+      "trial": 5,
+      "roll_deg": 20.0,
+      "passed": false,
+      "failures": [
+        "falls=1 > 0",
+        "max_tilt_deg=68.53762134184412 > 15.0"
+      ],
+      "summary": {
+        "steps": 100,
+        "duration_s": 0.1,
+        "forward_displacement": -1.6063294143173599,
+        "lateral_displacement": 3.916146475022006,
+        "average_speed": 42.32788371880696,
+        "falls": 1,
+        "recovery_fraction": 0.37,
+        "max_tilt_deg": 68.53762134184412,
+        "final_support_legs": 6
+      }
+    }
+  ]
+}
