@@ -1,0 +1,1 @@
+frame,sim_time,motor_drive,left_drive,right_drive,contact_fraction,force_drive,proprioceptive_drive,velocity_drive,recovery_scale,height,roll_deg,pitch_deg,wing_motion,wing_drive,contact_LF,contact_LM,contact_LH,contact_RF,contact_RM,contact_RH,force_LF,force_LM,force_LH,force_RF,force_RM,force_RH
