@@ -55,6 +55,63 @@ class FlyBody:
         )
 
         self.num_dofs = len(self.joint_order)
+        self.mj_joint_lookup = {}
+
+        for j_id in range(self.sim.mj_model.njnt):
+            full_name = self.sim.mj_model.joint(j_id).name
+
+            self.mj_joint_lookup[full_name] = j_id
+
+            if "/" in full_name:
+                self.mj_joint_lookup[
+                    full_name.split("/")[-1]
+                ] = j_id
+
+        self.bio_limits_min = np.zeros(self.num_dofs)
+        self.bio_limits_max = np.zeros(self.num_dofs)
+
+        for i, jdof in enumerate(self.joint_order):
+
+            j_id = self.mj_joint_lookup.get(
+                jdof.name,
+                -1,
+            )
+
+            if (
+                j_id != -1
+                and self.sim.mj_model.jnt_limited[j_id]
+            ):
+                r = self.sim.mj_model.jnt_range[j_id]
+
+                self.bio_limits_min[i] = r[0]
+                self.bio_limits_max[i] = r[1]
+
+            else:
+                self.bio_limits_min[i] = -DEFAULT_PHYSIO_BOUND
+                self.bio_limits_max[i] = DEFAULT_PHYSIO_BOUND
+
+        self.legs = [
+            "LF",
+            "LM",
+            "LH",
+            "RF",
+            "RM",
+            "RH",
+        ]
+
+        self.leg_dof_map = {
+            leg: [
+                i
+                for i, jdof in enumerate(
+                    self.joint_order
+                )
+                if (
+                    f'-{leg.lower()}_' in jdof.name.lower()
+                    or f'_{leg.lower()}_' in jdof.name.lower()
+                )
+            ]
+            for leg in self.legs
+        }
 
         self.filtered_joint_targets = np.zeros(self.num_dofs)
 
