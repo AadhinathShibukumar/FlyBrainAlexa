@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import mujoco
 from gait_controller import TripodGait
+from src.brain.motor_output import get_motor_drive
 from flygym.simulation import Simulation
 from flygym.compose import NeuroMechFly, FlatGroundWorld, ActuatorType
 
@@ -65,6 +66,7 @@ filtered_joint_targets = np.zeros(num_dofs)
 alpha = 0.15
 
 gait = TripodGait()
+gait.amplitude = get_motor_drive()
 
 for step in range(100):
     snn_activations = gait.step()
