@@ -131,6 +131,14 @@ def run(
                     "pitch_deg": np.degrees(pitch),
                     "wing_motion": 0.0,
                     "wing_drive": 0.0,
+                    **{
+                        f"contact_{leg}": float(contacts[index])
+                        for index, leg in enumerate(body.legs)
+                    },
+                    **{
+                        f"force_{leg}": float(contact_forces[index])
+                        for index, leg in enumerate(body.legs)
+                    },
                 }
             )
 
