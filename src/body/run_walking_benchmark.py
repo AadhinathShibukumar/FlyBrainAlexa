@@ -16,6 +16,8 @@ def run(
     steps: int,
     telemetry_path: Path,
     physics_substeps: int = 50,
+    initial_roll_deg: float = 0.0,
+    initial_lateral_offset: float = 0.0,
 ) -> dict[str, float | int]:
     if steps <= 0:
         raise ValueError("steps must be positive")
@@ -31,6 +33,15 @@ def run(
     sim.set_actuator_inputs(fly.name, body.actuator_type, neutral_targets)
     for _ in range(300):
         sim.step()
+    sim.mj_data.qpos[1] += initial_lateral_offset
+    if initial_roll_deg:
+        angle = np.radians(initial_roll_deg)
+        sim.mj_data.qpos[3:7] = (
+            np.cos(angle / 2.0),
+            np.sin(angle / 2.0),
+            0.0,
+            0.0,
+        )
     mujoco.mj_forward(sim.mj_model, sim.mj_data)
 
     brain = ConnectomeBrain()

@@ -30,6 +30,8 @@ def main() -> int:
     parser.add_argument("--trials", type=int, default=3)
     parser.add_argument("--steps", type=int, default=200)
     parser.add_argument("--physics-substeps", type=int, default=10)
+    parser.add_argument("--initial-roll-deg", type=float, default=0.0)
+    parser.add_argument("--initial-lateral-offset", type=float, default=0.0)
     parser.add_argument(
         "--output-dir", type=Path, default=Path("data/walking_trials")
     )
@@ -47,6 +49,8 @@ def main() -> int:
             args.steps,
             args.output_dir / f"trial_{index + 1}.csv",
             args.physics_substeps,
+            args.initial_roll_deg,
+            args.initial_lateral_offset,
         )
         failures = validate_summary(summary)
         trials.append(
