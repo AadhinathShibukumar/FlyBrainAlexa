@@ -14,6 +14,7 @@ from src.body.proprioception import Proprioception
 from src.body.recovery_controller import RecoveryController
 from src.body.support_balance import SupportBalance
 from src.body.takeoff_controller import FlightPhase, TakeoffController
+from src.body.telemetry_logger import TelemetryLogger
 from src.body.wing_controller import WingbeatController
 from src.brain.behavior_controller import BehaviorController
 from src.brain.connectome_brain import ConnectomeBrain
@@ -97,6 +98,7 @@ BALANCE_CONTROLLER_ENABLED = True
 FLIGHT_TEST_ENABLED = False
 WINGBEAT_IN_WALKING = True
 WING_WALKING_AMPLITUDE = 0.55
+TELEMETRY_PATH = "data/live_telemetry.csv"
 leg_dof_map = {
     leg: [
         i for i, jdof in enumerate(joint_order) 
@@ -188,6 +190,7 @@ with mujoco.viewer.launch_passive(sim.mj_model, sim.mj_data) as viewer:
         f"contacts={int(np.count_nonzero(startup_contacts > 0))} "
         f"mode={'flight-test' if FLIGHT_TEST_ENABLED else 'walking'}"
     )
+    telemetry = TelemetryLogger(TELEMETRY_PATH)
     
     frame = 0
     while viewer.is_running():
@@ -384,6 +387,25 @@ with mujoco.viewer.launch_passive(sim.mj_model, sim.mj_data) as viewer:
             sim.mj_data.qpos[3:7].copy(),
             leg_contacts,
         )
+        telemetry.write(
+            {
+                "frame": frame,
+                "sim_time": sim.mj_data.time,
+                "motor_drive": brain_state["motor_drive"],
+                "left_drive": brain_state["left_drive"],
+                "right_drive": brain_state["right_drive"],
+                "contact_fraction": mechanosensory_drive,
+                "force_drive": contact_force_drive,
+                "proprioceptive_drive": proprioceptive_drive,
+                "velocity_drive": velocity_drive,
+                "recovery_scale": recovery_scale,
+                "height": sim.mj_data.qpos[2],
+                "roll_deg": np.degrees(roll),
+                "pitch_deg": np.degrees(pitch),
+                "wing_motion": wing_motion_drive,
+                "wing_drive": wing_drive,
+            }
+        )
         if frame <= 20 or frame % 100 == 0:
             airborne = mechanosensory_drive == 0.0 and sim.mj_data.qpos[2] > 1.5
             print(
@@ -433,3 +455,4 @@ with mujoco.viewer.launch_passive(sim.mj_model, sim.mj_data) as viewer:
         )
         viewer.sync()
         time.sleep(0.01)
+    telemetry.close()
