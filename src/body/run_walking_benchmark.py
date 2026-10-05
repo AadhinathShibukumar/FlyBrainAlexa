@@ -7,6 +7,7 @@ import numpy as np
 
 from src.body.fly_model import FlyBody
 from src.body.gait_controller import TripodGait
+from src.body.recovery_controller import RecoveryController
 from src.body.telemetry_logger import TelemetryLogger
 from src.brain.connectome_brain import ConnectomeBrain
 
@@ -15,15 +16,22 @@ def run(steps: int, telemetry_path: Path) -> dict[str, float | int]:
     body = FlyBody()
     sim = body.get_sim()
     fly = body.get_fly()
-    sim.mj_data.qpos[2] = 0.3
+    neutral = np.full(body.num_dofs, 0.5)
+    neutral_targets = body.bio_limits_min + neutral * (
+        body.bio_limits_max - body.bio_limits_min
+    )
+    sim.set_actuator_inputs(fly.name, body.actuator_type, neutral_targets)
+    for _ in range(300):
+        sim.step()
     mujoco.mj_forward(sim.mj_model, sim.mj_data)
 
     brain = ConnectomeBrain()
     gait = TripodGait()
-    gait.frequency = 20.0
+    gait.frequency = 12.0
+    recovery = RecoveryController()
     dt = 50 * sim.mj_model.opt.timestep
-    filtered = np.full(body.num_dofs, 0.5)
-    contacts = np.zeros(6, dtype=np.float32)
+    filtered = neutral_targets.copy()
+    contacts = body.get_sensory_state()["leg_contact"]
     proprioceptive_drive = 0.0
     contact_force_drive = 0.0
     start_xy = sim.mj_data.qpos[:2].copy()
@@ -34,6 +42,13 @@ def run(steps: int, telemetry_path: Path) -> dict[str, float | int]:
 
     with TelemetryLogger(telemetry_path) as logger:
         for frame in range(steps):
+            roll, pitch = _roll_pitch(sim.mj_data.qpos[3:7])
+            recovery_scale = recovery.scale(
+                support_count=int(np.count_nonzero(contacts > 0.0)),
+                roll=roll,
+                pitch=pitch,
+                root_velocity=sim.mj_data.qvel[:2],
+            )
             state = brain.step(
                 olfactory_drive=2.0,
                 mechanosensory_drive=float(contacts.mean()),
@@ -43,7 +58,7 @@ def run(steps: int, telemetry_path: Path) -> dict[str, float | int]:
             amplitudes = np.array(
                 [state["leg_drives"][leg] for leg in body.legs],
                 dtype=float,
-            )
+            ) * recovery_scale
             gait_activations = gait.step(
                 dt=dt,
                 amplitudes=amplitudes,
@@ -91,7 +106,7 @@ def run(steps: int, telemetry_path: Path) -> dict[str, float | int]:
                     "force_drive": contact_force_drive,
                     "proprioceptive_drive": proprioceptive_drive,
                     "velocity_drive": float(np.linalg.norm(sim.mj_data.qvel[:2])),
-                    "recovery_scale": 0.0 if fallen else 1.0,
+                    "recovery_scale": recovery_scale,
                     "height": sim.mj_data.qpos[2],
                     "roll_deg": np.degrees(roll),
                     "pitch_deg": np.degrees(pitch),
