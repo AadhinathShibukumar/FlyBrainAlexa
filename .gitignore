@@ -54,3 +54,4 @@ data/flywire_annotations/
 
 # Virtual environment
 fly_env/
+__pycache__/
