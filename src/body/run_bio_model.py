@@ -4,7 +4,12 @@ import mujoco
 from gait_controller import TripodGait
 from src.brain.motor_output import get_motor_drive
 from flygym.simulation import Simulation
-from flygym.compose import NeuroMechFly, FlatGroundWorld, ActuatorType
+from flygym.compose import (
+    NeuroMechFly,
+    FlatGroundWorld,
+    ActuatorType,
+    KinematicPosePreset,
+)
 
 class FlyOrientation:
     def __init__(self, quat=(1.0, 0.0, 0.0, 0.0)):
@@ -16,7 +21,10 @@ class FlyOrientation:
 # 1. Instantiate Fly and Actuator Assembly
 fly = NeuroMechFly()
 fly.skeleton = fly._get_base_skeleton()
-fly.add_joints(fly.skeleton)
+fly.add_joints(
+    fly.skeleton,
+    neutral_pose=KinematicPosePreset.NEUTRAL,
+)
 
 joint_dofs = list(fly.skeleton.iter_jointdofs())
 actuator_type = ActuatorType.POSITION

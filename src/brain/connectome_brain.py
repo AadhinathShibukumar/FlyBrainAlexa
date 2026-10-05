@@ -1,6 +1,9 @@
 from pathlib import Path
 
+import numpy as np
 import torch
+
+from src.brain.leg_drive_mapper import LegDriveMapper
 
 
 class ConnectomeBrain:
@@ -32,6 +35,7 @@ class ConnectomeBrain:
             self.adjacency.shape[0], device=self.device
         )
         self.spikes = torch.zeros_like(self.membrane)
+        self.leg_mapper = LegDriveMapper()
 
     def reset(self) -> None:
         self.membrane.zero_()
@@ -42,6 +46,8 @@ class ConnectomeBrain:
         self,
         olfactory_drive: float = 0.0,
         mechanosensory_drive: float = 0.0,
+        proprioceptive_drive: float = 0.0,
+        contact_force_drive: float = 0.0,
     ) -> dict[str, float]:
         """Advance one neural timestep and return population motor activity."""
         sensory_input = torch.zeros_like(self.membrane)
@@ -49,6 +55,14 @@ class ConnectomeBrain:
             sensory_input[self.groups["olfactory"]] = olfactory_drive
         if mechanosensory_drive:
             sensory_input[self.groups["mechanosensory"]] = mechanosensory_drive
+        if contact_force_drive:
+            sensory_input[self.groups["mechanosensory"]] += float(
+                np.clip(contact_force_drive, 0.0, 1.0)
+            )
+        if proprioceptive_drive:
+            sensory_input[self.groups["mechanosensory"]] += float(
+                np.clip(proprioceptive_drive, 0.0, 1.0)
+            )
 
         synaptic_current = (
             torch.sparse.mm(
@@ -72,17 +86,11 @@ class ConnectomeBrain:
         right_drive = float(
             (self.spikes[self.motor_groups["descending_right"]].sum() / right_count).item()
         )
+        leg_drives = self.leg_mapper.step(left_drive, right_drive)
         return {
             "motor_spikes": float(motor_spikes.item()),
             "motor_drive": motor_drive,
             "left_drive": left_drive,
             "right_drive": right_drive,
-            "leg_drives": {
-                "LF": left_drive,
-                "LM": left_drive,
-                "LH": left_drive,
-                "RF": right_drive,
-                "RM": right_drive,
-                "RH": right_drive,
-            },
+            "leg_drives": leg_drives,
         }
