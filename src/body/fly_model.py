@@ -6,6 +6,7 @@ from flygym.compose import (
     NeuroMechFly,
     FlatGroundWorld,
     ActuatorType,
+    KinematicPosePreset,
 )
 
 DEFAULT_PHYSIO_BOUND = 0.8
@@ -28,7 +29,10 @@ class FlyBody:
 
         self.fly = NeuroMechFly()
         self.fly.skeleton = self.fly._get_base_skeleton()
-        self.fly.add_joints(self.fly.skeleton)
+        self.fly.add_joints(
+            self.fly.skeleton,
+            neutral_pose=KinematicPosePreset.NEUTRAL,
+        )
 
         joint_dofs = list(self.fly.skeleton.iter_jointdofs())
 
@@ -42,7 +46,7 @@ class FlyBody:
 
         world.add_fly(
             self.fly,
-            spawn_position=(0, 0, 0.2),
+            spawn_position=(0, 0, 2.0),
             spawn_rotation=FlyOrientation(),
         )
 
@@ -137,3 +141,20 @@ class FlyBody:
 
     def get_fly(self):
         return self.fly
+
+    def get_sensory_state(self):
+        """Return per-leg contact force and normalized support feedback."""
+        found, forces, _, positions, normals, tangents = (
+            self.sim.get_ground_contact_info(self.fly.name)
+        )
+        contact_force = np.linalg.norm(forces, axis=1).astype(np.float32)
+        contact = (found > 0.0).astype(np.float32)
+        return {
+            "leg_contact": contact,
+            "contact_force": contact_force,
+            "contact_position": positions.astype(np.float32),
+            "contact_normal": normals.astype(np.float32),
+            "contact_tangent": tangents.astype(np.float32),
+            "contact_found": found.astype(np.float32),
+            "mechanosensory_drive": float(contact.mean()),
+        }
