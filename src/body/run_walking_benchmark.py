@@ -18,6 +18,7 @@ def run(
     physics_substeps: int = 50,
     initial_roll_deg: float = 0.0,
     initial_lateral_offset: float = 0.0,
+    initial_roll_rate_deg_s: float = 0.0,
 ) -> dict[str, float | int]:
     if steps <= 0:
         raise ValueError("steps must be positive")
@@ -42,6 +43,8 @@ def run(
             0.0,
             0.0,
         )
+    if initial_roll_rate_deg_s:
+        sim.mj_data.qvel[3] += np.radians(initial_roll_rate_deg_s)
     mujoco.mj_forward(sim.mj_model, sim.mj_data)
 
     brain = ConnectomeBrain()
