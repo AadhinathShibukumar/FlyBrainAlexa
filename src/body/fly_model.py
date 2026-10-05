@@ -42,7 +42,7 @@ class FlyBody:
 
         world.add_fly(
             self.fly,
-            spawn_position=(0, 0, 0.2),
+            spawn_position=(0, 0, 2.0),
             spawn_rotation=FlyOrientation(),
         )
 
@@ -137,3 +137,24 @@ class FlyBody:
 
     def get_fly(self):
         return self.fly
+
+    def get_sensory_state(self):
+        """Return per-leg contact force and normalized support feedback."""
+        contact = np.zeros(len(self.legs), dtype=np.float32)
+        contact_force = np.zeros(len(self.legs), dtype=np.float32)
+        for index, leg in enumerate(self.legs):
+            sensor_id = self.sim.mj_model.sensor(
+                f"ground_contact_{leg.lower()}_leg"
+            ).id
+            start = self.sim.mj_model.sensor_adr[sensor_id]
+            size = self.sim.mj_model.sensor_dim[sensor_id]
+            force_norm = np.linalg.norm(
+                self.sim.mj_data.sensordata[start:start + size]
+            )
+            contact_force[index] = force_norm
+            contact[index] = float(force_norm > 2.0)
+        return {
+            "leg_contact": contact,
+            "contact_force": contact_force,
+            "mechanosensory_drive": float(contact.mean()),
+        }

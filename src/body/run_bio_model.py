@@ -70,7 +70,7 @@ gait.amplitude = get_motor_drive()
 
 for step in range(100):
     snn_activations = gait.step()
-    raw_normalized = np.zeros(num_dofs)
+    raw_normalized = np.full(num_dofs, 0.5)
     
     for leg_idx, leg in enumerate(legs):
         dof_indices = leg_dof_map[leg]

@@ -10,6 +10,7 @@ class ConnectomeBrain:
         self,
         matrix_path: str | Path = "data/fly_adjacency_matrix.pt",
         groups_path: str | Path = "data/cell_groups.pt",
+        motor_mapping_path: str | Path = "data/motor_mapping.pt",
         synapse_weight: float = 0.08,
         decay: float = 0.95,
         threshold: float = 1.0,
@@ -18,6 +19,12 @@ class ConnectomeBrain:
         self.adjacency = torch.load(matrix_path, map_location=self.device)
         groups = torch.load(groups_path, map_location=self.device)
         self.groups = {name: indices.long() for name, indices in groups.items()}
+        mapping = torch.load(motor_mapping_path, map_location=self.device)
+        self.motor_groups = {
+            name: indices.long()
+            for name, indices in mapping.items()
+            if name.startswith("descending_")
+        }
         self.decay = decay
         self.threshold = threshold
         self.synapse_weight = synapse_weight
@@ -31,11 +38,17 @@ class ConnectomeBrain:
         self.spikes.zero_()
 
     @torch.no_grad()
-    def step(self, olfactory_drive: float = 0.0) -> dict[str, float]:
+    def step(
+        self,
+        olfactory_drive: float = 0.0,
+        mechanosensory_drive: float = 0.0,
+    ) -> dict[str, float]:
         """Advance one neural timestep and return population motor activity."""
         sensory_input = torch.zeros_like(self.membrane)
         if olfactory_drive:
             sensory_input[self.groups["olfactory"]] = olfactory_drive
+        if mechanosensory_drive:
+            sensory_input[self.groups["mechanosensory"]] = mechanosensory_drive
 
         synaptic_current = (
             torch.sparse.mm(
@@ -48,14 +61,28 @@ class ConnectomeBrain:
         self.spikes = (self.membrane >= self.threshold).to(self.membrane.dtype)
         self.membrane.masked_fill_(self.spikes.bool(), 0.0)
 
-        motor_spikes = self.spikes[self.groups["descending_motor"]].sum()
-        motor_count = max(len(self.groups["descending_motor"]), 1)
+        motor_spikes = self.spikes[self.motor_groups["descending_all"]].sum()
+        motor_count = max(len(self.motor_groups["descending_all"]), 1)
         motor_drive = float((motor_spikes / motor_count).item())
+        left_count = max(len(self.motor_groups["descending_left"]), 1)
+        right_count = max(len(self.motor_groups["descending_right"]), 1)
+        left_drive = float(
+            (self.spikes[self.motor_groups["descending_left"]].sum() / left_count).item()
+        )
+        right_drive = float(
+            (self.spikes[self.motor_groups["descending_right"]].sum() / right_count).item()
+        )
         return {
             "motor_spikes": float(motor_spikes.item()),
             "motor_drive": motor_drive,
+            "left_drive": left_drive,
+            "right_drive": right_drive,
             "leg_drives": {
-                leg: motor_drive
-                for leg in ("LF", "LM", "LH", "RF", "RM", "RH")
+                "LF": left_drive,
+                "LM": left_drive,
+                "LH": left_drive,
+                "RF": right_drive,
+                "RM": right_drive,
+                "RH": right_drive,
             },
         }
