@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import mujoco
+from gait_controller import TripodGait
 from flygym.simulation import Simulation
 from flygym.compose import NeuroMechFly, FlatGroundWorld, ActuatorType
 
@@ -63,14 +64,16 @@ leg_dof_map = {
 filtered_joint_targets = np.zeros(num_dofs)
 alpha = 0.15
 
+gait = TripodGait()
+
 for step in range(100):
-    snn_activations = torch.rand(6, 24)
+    snn_activations = gait.step()
     raw_normalized = np.zeros(num_dofs)
     
     for leg_idx, leg in enumerate(legs):
         dof_indices = leg_dof_map[leg]
         if len(dof_indices) > 0:
-            acts = snn_activations[leg_idx].detach().cpu().numpy()
+            acts = snn_activations[leg_idx]
             n_assign = min(len(dof_indices), len(acts))
             raw_normalized[dof_indices[:n_assign]] = acts[:n_assign]
     
